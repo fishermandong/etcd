@@ -120,7 +120,7 @@ func NewRawNode(config *Config, peers []Peer) (*RawNode, error) {
 
 // Tick advances the internal logical clock by a single tick.
 func (rn *RawNode) Tick() {
-	rn.raft.tick()
+	rn.raft.tick()//DHQ: raft的tick，是个变量，可能指向tickHearbeat, 或者tickElection，根据角色不同
 }
 
 // TickQuiesced advances the internal logical clock by a single tick without
@@ -198,15 +198,15 @@ func (rn *RawNode) Step(m pb.Message) error {
 }
 
 // Ready returns the current point-in-time state of this RawNode.
-func (rn *RawNode) Ready() Ready {
-	rd := rn.newReady()
+func (rn *RawNode) Ready() Ready {//DHQ: 这个函数，获取了raft里面所有的msgs. raft.go里面的send，实际上就是append到了msgs里面了。
+	rd := rn.newReady()//DHQ: 这个里面，已经把 raft.msgs，全部移过来了
 	rn.raft.msgs = nil
 	return rd
 }
 
 // HasReady called when RawNode user need to check if any Ready pending.
 // Checking logic in this method should be consistent with Ready.containsUpdates().
-func (rn *RawNode) HasReady() bool {
+func (rn *RawNode) HasReady() bool {//DHQ: node.go没有Ready()和HasReady()，直接通过chan传递出去了。
 	r := rn.raft
 	if !r.softState().equal(rn.prevSoftSt) {
 		return true
