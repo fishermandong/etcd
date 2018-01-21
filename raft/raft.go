@@ -399,7 +399,7 @@ func (r *raft) learnerNodes() []uint64 {
 }
 
 // send persists state to stable storage and then sends to its mailbox.
-func (r *raft) send(m pb.Message) {//DHQ: 重点是：raft的send，真把消息发出去，还是等待外面app处理？ 参见raw_node里面的Ready()，就是外面处理的。
+func (r *raft) send(m pb.Message) {//DHQ: 重点是：raft的send，真把消息发出去，还是放到msgs队列，等待外面app处理？==>后者，参见raw_node里面的Ready()，就是外面处理的。cockroach会在Propose等函数实现中，调用raft的函数后，把regionid放到scheduler的queue中(enqueue)
 	m.From = r.id
 	if m.Type == pb.MsgVote || m.Type == pb.MsgVoteResp || m.Type == pb.MsgPreVote || m.Type == pb.MsgPreVoteResp {
 		if m.Term == 0 {
