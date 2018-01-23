@@ -40,7 +40,7 @@ func (rn *RawNode) newReady() Ready {
 	return newReady(rn.raft, rn.prevSoftSt, rn.prevHardSt)
 }
 
-func (rn *RawNode) commitReady(rd Ready) {
+func (rn *RawNode) commitReady(rd Ready) {//DHQ: 什么时候调用？
 	if rd.SoftState != nil {
 		rn.prevSoftSt = rd.SoftState
 	}
@@ -192,7 +192,7 @@ func (rn *RawNode) Step(m pb.Message) error {
 		return ErrStepLocalMsg
 	}
 	if pr := rn.raft.getProgress(m.From); pr != nil || !IsResponseMsg(m.Type) {
-		return rn.raft.Step(m)
+		return rn.raft.Step(m)//DHQ: getProgress能找到对应peer的状态(正在与对方通信)，或者不是response
 	}
 	return ErrStepPeerNotFound
 }
@@ -228,8 +228,8 @@ func (rn *RawNode) HasReady() bool {//DHQ: node.go没有Ready()和HasReady()，�
 
 // Advance notifies the RawNode that the application has applied and saved progress in the
 // last Ready results.
-func (rn *RawNode) Advance(rd Ready) {
-	rn.commitReady(rd)
+func (rn *RawNode) Advance(rd Ready) {//DHQ: apply后调用
+	rn.commitReady(rd)//DHQ: 上面comment说，rd包含了 last Ready results
 }
 
 // Status returns the current status of the given group.
@@ -239,7 +239,7 @@ func (rn *RawNode) Status() *Status {
 }
 
 // ReportUnreachable reports the given node is not reachable for the last send.
-func (rn *RawNode) ReportUnreachable(id uint64) {
+func (rn *RawNode) ReportUnreachable(id uint64) {//DHQ: 是指上次给一个node send时，发现为Unreachable
 	_ = rn.raft.Step(pb.Message{Type: pb.MsgUnreachable, From: id})
 }
 
@@ -259,6 +259,6 @@ func (rn *RawNode) TransferLeader(transferee uint64) {
 // Read State has a read index. Once the application advances further than the read
 // index, any linearizable read requests issued before the read request can be
 // processed safely. The read state will have the same rctx attached.
-func (rn *RawNode) ReadIndex(rctx []byte) {
+func (rn *RawNode) ReadIndex(rctx []byte) { //DHQ: TiKV也有 ReadIndex读
 	_ = rn.raft.Step(pb.Message{Type: pb.MsgReadIndex, Entries: []pb.Entry{{Data: rctx}}})
 }
