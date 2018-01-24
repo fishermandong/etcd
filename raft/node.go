@@ -68,7 +68,7 @@ type Ready struct {
 
 	// Entries specifies entries to be saved to stable storage BEFORE
 	// Messages are sent.
-	Entries []pb.Entry //DHQ: 需要先保存到本地的entry
+	Entries []pb.Entry //DHQ: 需要先保存到本地的entry，然后才能做send
 
 	// Snapshot specifies the snapshot to be saved to stable storage.
 	Snapshot pb.Snapshot //DHQ: 要保存到本地的snapshot

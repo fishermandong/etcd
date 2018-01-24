@@ -598,7 +598,7 @@ func (r *raft) reset(term uint64) {
 	r.readOnly = newReadOnly(r.readOnly.option)
 }
 
-func (r *raft) appendEntry(es ...pb.Entry) {
+func (r *raft) appendEntry(es ...pb.Entry) {//DHQ: Entry的Term和Index，在这填的。正常的Proposal, 在stepLeader中调用
 	li := r.raftLog.lastIndex()
 	for i := range es {
 		es[i].Term = r.Term
@@ -882,7 +882,7 @@ func (r *raft) Step(m pb.Message) error {
 		}
 
 	default:
-		err := r.step(r, m)
+		err := r.step(r, m)//DHQ: step可能指向stepLeader, stepFollower
 		if err != nil {
 			return err
 		}
