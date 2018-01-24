@@ -39,7 +39,7 @@ var (
 // The state is volatile and does not need to be persisted to the WAL.
 type SoftState struct {
 	Lead      uint64 // must use atomic operations to access; keep 64-bit aligned.
-	RaftState StateType
+	RaftState StateType //DHQ: 这个就是role，candidate/leader/follower
 }
 
 func (a *SoftState) equal(b *SoftState) bool {
@@ -314,15 +314,15 @@ func (n *node) run(r *raft) {
 		// TODO: maybe buffer the config propose if there exists one (the way
 		// described in raft dissertation)
 		// Currently it is dropped in Step silently.
-		case m := <-propc:
+		case m := <-propc://DHQ: 接收外界的proposal
 			m.From = r.id
 			r.Step(m)
-		case m := <-n.recvc:
+		case m := <-n.recvc: //DHQ: 收到了peer的消息
 			// filter out response message from unknown From.
 			if pr := r.getProgress(m.From); pr != nil || !IsResponseMsg(m.Type) {
 				r.Step(m) // raft never returns an error
 			}
-		case cc := <-n.confc:
+		case cc := <-n.confc://DHQ conf change
 			if cc.NodeID == None {
 				select {
 				case n.confstatec <- pb.ConfState{
@@ -432,7 +432,7 @@ func (n *node) ProposeConfChange(ctx context.Context, cc pb.ConfChange) error {
 // if any.
 func (n *node) step(ctx context.Context, m pb.Message) error {
 	ch := n.recvc
-	if m.Type == pb.MsgProp {
+	if m.Type == pb.MsgProp { //DHQ: 往propc / recvc发送msg
 		ch = n.propc
 	}
 
